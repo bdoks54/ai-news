@@ -29,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ClerkProvider localization={koKR}>
           <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
             <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-              <Link href="/" className="font-bold text-slate-900">
+              <Link href="/dashboard" className="font-bold text-slate-900">
                 AI 뉴스 수집기
               </Link>
               <HeaderNav />

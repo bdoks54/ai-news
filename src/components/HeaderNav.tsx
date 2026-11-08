@@ -9,7 +9,7 @@ export default function HeaderNav() {
   return (
     <Show when="signed-in">
       <nav className="flex items-center gap-4 text-sm text-slate-600">
-        <Link href="/" className="hover:text-slate-900">뉴스</Link>
+        <Link href="/dashboard" className="hover:text-slate-900">뉴스</Link>
         <Link href="/categories" className="hover:text-slate-900">카테고리</Link>
         <Link href="/settings" className="hover:text-slate-900">설정</Link>
         <UserButton />

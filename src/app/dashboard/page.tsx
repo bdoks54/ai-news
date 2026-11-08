@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
@@ -8,7 +9,12 @@ import CategoryTabs from "@/components/CategoryTabs";
 import FetchButton from "@/components/FetchButton";
 import NewsCard from "@/components/NewsCard";
 
-export default async function HomePage({ searchParams }: PageProps<"/">) {
+export const metadata: Metadata = { title: "대시보드 · AI 뉴스 수집기" };
+
+const UNCATEGORIZED_COLOR = "#94a3b8";
+
+/** 메인 화면. articles와 categories를 조인해 최신순으로 카드 목록을 그린다. `/`는 여기로 리다이렉트된다. */
+export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const { userId } = await auth();
   if (!userId) return null;
 
@@ -32,8 +38,10 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         categoryColor: categories.color,
       })
       .from(articles)
-      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      // categories 쪽에도 userId 조건을 걸어 다른 사용자의 카테고리와는 절대 조인되지 않게 한다.
+      .leftJoin(categories, and(eq(articles.categoryId, categories.id), eq(categories.userId, userId)))
       .where(filter)
+      // 최신순: 발행일이 없는 기사는 맨 뒤로, 같은 발행일이면 늦게 저장된 순.
       .orderBy(sql`${articles.publishedAt} desc nulls last`, desc(articles.createdAt))
       .limit(200),
     db
@@ -61,7 +69,12 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         total={total}
         tabs={[
           ...cats.map((c) => ({ id: c.id, name: c.name, color: c.color, count: countMap.get(c.id) ?? 0 })),
-          { id: "uncategorized", name: "미분류", color: "#94a3b8", count: countMap.get("uncategorized") ?? 0 },
+          {
+            id: "uncategorized",
+            name: "미분류",
+            color: UNCATEGORIZED_COLOR,
+            count: countMap.get("uncategorized") ?? 0,
+          },
         ]}
       />
 
@@ -83,7 +96,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               source={SOURCE_LABEL[a.source]}
               publishedAt={a.publishedAt?.toISOString() ?? null}
               categoryName={categoryName ?? "미분류"}
-              categoryColor={categoryColor ?? "#94a3b8"}
+              categoryColor={categoryColor ?? UNCATEGORIZED_COLOR}
               notionPageUrl={a.notionPageUrl}
             />
           ))}

@@ -3,6 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 @AGENTS.md
+@ui.md
 
 ## Project
 
@@ -44,4 +45,4 @@ There is no test suite. drizzle-kit reads `DATABASE_URL` from `.env.local` (see 
 
 **Notion OAuth (`src/lib/notion-oauth.ts`)**: Notion's MCP server acts as its own OAuth authorization server. `/api/notion/oauth/start` does dynamic client registration (RFC 7591, public client, no secret) plus PKCE and keeps the verifier/state in the `notion_oauth` cookie. The callback exchanges the code and stores the encrypted tokens along with the `clientId`, which is needed for refresh. `getValidAccessToken` refreshes when the token expires within 60s. The redirect URI is built from `APP_URL`, so it has to match the running origin.
 
-**UI**: Server components under `src/app/` query the DB directly. Mutations go through server actions (`categories/actions.ts`, `settings/actions.ts`) with `revalidatePath`, or client components in `src/components/` that POST to the API routes. The home page filters with `?category=<id|uncategorized>`.
+**UI**: Follow `ui.md` (colors, typography, layout, component class patterns) when adding or changing any screen. Server components under `src/app/` query the DB directly. Mutations go through server actions (`categories/actions.ts`, `settings/actions.ts`) with `revalidatePath`, or client components in `src/components/` that POST to the API routes. The main screen is `/dashboard` (`/` redirects there via `next.config.ts`) and filters with `?category=<id|uncategorized>`.
