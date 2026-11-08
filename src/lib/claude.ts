@@ -38,7 +38,7 @@ export type SummaryInput = { title: string; snippet: string; url: string };
 export type SummaryResult = { titleKo: string; summaryKo: string; category: string };
 
 /**
- * 기사 묶음을 한 번에 한국어로 번역/요약하고 카테고리를 고른다.
+ * 기사 묶음을 Claude 호출 한 번으로 한국어 번역·요약하고 카테고리까지 고른다.
  * 결과 배열은 입력과 같은 순서이며, 처리하지 못한 기사는 null이다.
  */
 export async function summarizeArticles(

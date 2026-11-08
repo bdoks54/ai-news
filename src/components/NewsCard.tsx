@@ -5,8 +5,8 @@ import { useState } from "react";
 
 type Props = {
   id: string;
-  titleKo: string;
-  summaryKo: string;
+  title: string;
+  summary: string;
   originalUrl: string;
   source: string;
   publishedAt: string | null;
@@ -62,8 +62,8 @@ export default function NewsCard(props: Props) {
         </span>
       </div>
 
-      <h2 className="mb-2 font-semibold leading-snug text-slate-900">{props.titleKo}</h2>
-      <p className="mb-4 flex-1 whitespace-pre-line text-sm leading-relaxed text-slate-600">{props.summaryKo}</p>
+      <h2 className="mb-2 font-semibold leading-snug text-slate-900">{props.title}</h2>
+      <p className="mb-4 flex-1 whitespace-pre-line text-sm leading-relaxed text-slate-600">{props.summary}</p>
 
       <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-sm">
         <a href={props.originalUrl} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-slate-900">

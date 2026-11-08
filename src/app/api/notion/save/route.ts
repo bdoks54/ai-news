@@ -5,11 +5,10 @@ import { z } from "zod";
 import { db } from "@/db";
 import { articles, categories } from "@/db/schema";
 import { UNCATEGORIZED } from "@/lib/categories";
-import { saveArticleToNotion } from "@/lib/claude";
-import { getValidAccessToken } from "@/lib/notion-oauth";
+import { createNotionPage, getNotionConfig, NotionError } from "@/lib/notion";
 import { SOURCE_LABEL } from "@/lib/rss";
 
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 const Body = z.object({ articleId: z.string().uuid() });
 
@@ -30,42 +29,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ notionPageUrl: row.article.notionPageUrl });
   }
 
-  let conn;
   try {
-    conn = await getValidAccessToken(userId);
-  } catch (e) {
-    console.error("[notion] 토큰 갱신 실패:", e);
-    conn = null;
-  }
-  if (!conn) {
-    return NextResponse.json(
-      { error: "Notion이 연결되어 있지 않습니다. 설정에서 Notion을 연결해 주세요.", needsConnect: true },
-      { status: 409 },
-    );
-  }
-
-  try {
+    const { token, databaseId } = getNotionConfig();
     const a = row.article;
-    const url = await saveArticleToNotion(
-      conn.accessToken,
-      {
-        titleKo: a.titleKo,
-        summaryKo: a.summaryKo,
-        categoryName: row.categoryName ?? UNCATEGORIZED,
-        sourceLabel: SOURCE_LABEL[a.source],
-        originalUrl: a.originalUrl,
-        originalTitle: a.originalTitle,
-        publishedAt: a.publishedAt,
-      },
-      conn.parentPageUrl,
-    );
-    await db.update(articles).set({ notionPageUrl: url }).where(eq(articles.id, a.id));
+    const url = await createNotionPage(token, databaseId, {
+      // 아직 번역 전이면 원문 제목·snippet으로 대체한다.
+      titleKo: a.titleKo ?? a.originalTitle,
+      summaryKo: a.summaryKo ?? a.snippet,
+      categoryName: row.categoryName ?? UNCATEGORIZED,
+      sourceLabel: SOURCE_LABEL[a.source],
+      originalUrl: a.originalUrl,
+      originalTitle: a.originalTitle,
+      publishedAt: a.publishedAt,
+    });
+    await db
+      .update(articles)
+      .set({ notionPageUrl: url })
+      .where(and(eq(articles.id, a.id), eq(articles.userId, userId)));
     return NextResponse.json({ notionPageUrl: url });
   } catch (e) {
+    if (e instanceof NotionError) {
+      return NextResponse.json(
+        { error: e.message, needsConnect: e.needsSetup },
+        { status: e.needsSetup ? 409 : 502 },
+      );
+    }
     console.error("[notion] 저장 실패:", e);
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Notion 저장에 실패했습니다." },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "Notion 저장에 실패했습니다." }, { status: 502 });
   }
 }

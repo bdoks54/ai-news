@@ -1,77 +1,52 @@
 import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { notionConnections } from "@/db/schema";
-import { disconnectNotion, saveParentPage } from "./actions";
+import { checkNotionStatus } from "@/lib/notion";
 
-export default async function SettingsPage({ searchParams }: PageProps<"/settings">) {
+export default async function SettingsPage() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const { notion, reason } = await searchParams;
-  const [conn] = await db
-    .select({ parentPageUrl: notionConnections.parentPageUrl, updatedAt: notionConnections.updatedAt })
-    .from(notionConnections)
-    .where(eq(notionConnections.userId, userId));
+  const status = await checkNotionStatus();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-xl font-bold">설정</h1>
 
-      {notion === "connected" && (
-        <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">Notion이 연결되었습니다.</p>
-      )}
-      {notion === "error" && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-          Notion 연결에 실패했습니다. {typeof reason === "string" ? reason : ""}
-        </p>
-      )}
-
       <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="font-semibold">Notion 연결</h2>
+        <div>
+          <h2 className="font-semibold">Notion 연결</h2>
+          {status.ok ? (
             <p className="text-sm text-slate-500">
-              {conn ? "연결됨 · 뉴스 카드의 ‘Notion 저장’ 버튼을 사용할 수 있습니다." : "연결되어 있지 않습니다."}
+              연결됨 · 뉴스가{" "}
+              <a
+                href={status.databaseUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-emerald-600 hover:text-emerald-500"
+              >
+                {status.databaseTitle} ↗
+              </a>{" "}
+              데이터베이스에 저장됩니다.
             </p>
-          </div>
-          {conn ? (
-            <form action={disconnectNotion}>
-              <button className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">연결 해제</button>
-            </form>
           ) : (
-            // OAuth 리다이렉트이므로 Link 대신 a 태그를 쓴다.
-            <a
-              href="/api/notion/oauth/start"
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-            >
-              Notion 연결하기
-            </a>
+            <p className="text-sm text-red-600">{status.reason}</p>
           )}
         </div>
 
-        {conn && (
-          <form action={saveParentPage} className="space-y-2 border-t border-slate-100 pt-4">
-            <label className="block text-sm font-medium" htmlFor="parentPageUrl">
-              저장할 상위 페이지 URL
-            </label>
-            <p className="text-xs text-slate-500">
-              뉴스가 이 페이지의 하위 페이지로 저장됩니다. 비워 두면 워크스페이스의 개인 페이지로 저장됩니다.
-            </p>
-            <div className="flex gap-2">
-              <input
-                id="parentPageUrl"
-                name="parentPageUrl"
-                defaultValue={conn.parentPageUrl ?? ""}
-                placeholder="https://www.notion.so/..."
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-              <button className="shrink-0 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-                저장
-              </button>
-            </div>
-          </form>
-        )}
+        <div className="space-y-1 border-t border-slate-100 pt-4 text-sm text-slate-600">
+          <p>Notion 저장은 서버의 환경 변수로 설정합니다.</p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              <code className="text-slate-900">NOTION_API_TOKEN</code>: Notion 내부 통합 토큰(<code>ntn_…</code>)
+            </li>
+            <li>
+              <code className="text-slate-900">NOTION_DATABASE_ID</code>: 뉴스를 저장할 데이터베이스 id 또는 URL
+            </li>
+          </ul>
+          <p className="text-slate-500">
+            데이터베이스는 Notion에서 오른쪽 위 <span className="font-medium">⋯ → 연결</span>에 통합을 추가해야
+            저장할 수 있습니다. 속성은 제목(제목), 요약(텍스트), 날짜(날짜), 출처(URL), 카테고리(선택)가 필요합니다. 환경 변수를 바꾼 뒤에는 서버를 다시 시작해 주세요.
+          </p>
+        </div>
       </section>
     </div>
   );

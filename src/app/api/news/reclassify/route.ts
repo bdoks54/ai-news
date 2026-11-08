@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
@@ -23,7 +23,12 @@ export async function POST(req: Request) {
   const hints = cats.map((c) => ({ name: c.name, description: c.description }));
 
   const targets = await db
-    .select({ id: articles.id, title: articles.titleKo, summary: articles.summaryKo })
+    .select({
+      id: articles.id,
+      // 아직 번역 전인 기사는 원문 제목·snippet으로 분류한다.
+      title: sql<string>`coalesce(${articles.titleKo}, ${articles.originalTitle})`,
+      summary: sql<string>`coalesce(${articles.summaryKo}, ${articles.snippet})`,
+    })
     .from(articles)
     .where(
       parsed.data.scope === "uncategorized"

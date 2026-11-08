@@ -31,8 +31,10 @@ export const articles = pgTable(
     originalUrl: text("original_url").notNull(),
     originalTitle: text("original_title").notNull(),
     author: text("author"), // 원문 작성자. 피드에 없으면 null
-    titleKo: text("title_ko").notNull(),
-    summaryKo: text("summary_ko").notNull(),
+    snippet: text("snippet").notNull().default(""), // RSS 본문 요약(태그 제거). 나중에 Claude 요약의 입력으로 쓴다.
+    // 한국어 제목·요약. Claude 처리 전에는 null이며, 화면에서는 원문 제목·snippet으로 대체 표시한다.
+    titleKo: text("title_ko"),
+    summaryKo: text("summary_ko"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     // null = 미분류. 카테고리가 삭제되면 자동으로 미분류가 된다.
     categoryId: uuid("category_id").references(() => categories.id, {

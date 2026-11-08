@@ -226,6 +226,27 @@
   - 저장 후: `Notion에서 열기 ↗` 링크 (`font-medium text-emerald-600 hover:text-emerald-500`)
 - 오류는 카드 맨 아래에 `mt-2 text-xs text-red-600`으로 표시한다. Notion 연결이 필요하면 `설정으로 이동` 링크를 덧붙인다.
 
+### 5.4 페이지 나누기
+
+카드는 한 페이지에 **최대 9개**(3열 × 3줄)까지 보여 주고, 그리드 아래 가운데에 페이지 이동을 둔다(`src/components/Pagination.tsx`).
+
+```
+        [이전] [1] … [4] [5] [6] … [12] [다음]
+```
+
+- 주소는 `/dashboard?category=<id|uncategorized>&page=<n>`이다. 1페이지와 ‘전체’는 쿼리에서 뺀다.
+- 카테고리 탭을 누르면 1페이지로 돌아간다. 범위를 벗어난 `page`는 가장 가까운 유효한 페이지로 맞춘다.
+- 페이지가 하나뿐이면 그리지 않는다.
+- 번호는 첫·끝 페이지와 현재 페이지 앞뒤 1쪽만 보여 주고, 사이는 `…`(`aria-hidden`)로 줄인다.
+
+| 부분 | 클래스 |
+| --- | --- |
+| 컨테이너 | `<nav aria-label="페이지">` + `flex items-center justify-center gap-1` |
+| 공통 | `flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-sm transition` |
+| 기본 | `border-slate-300 bg-white text-slate-700 hover:bg-slate-50` |
+| 현재 페이지 | `border-slate-900 bg-slate-900 text-white` + `aria-current="page"` |
+| 비활성 (첫/끝에서 이전/다음) | `border-slate-200 bg-white text-slate-300` + `aria-disabled="true"`, 링크 대신 `<span>` |
+
 ---
 
 ## 6. 공통 컴포넌트
