@@ -71,7 +71,7 @@
 ## 5. 데이터 모델
 - **categories**: id, userId, name, description, color, createdAt
   - (userId, name)에 unique를 겁니다.
-- **articles**: id, userId, source, originalUrl, originalTitle, titleKo, summaryKo, publishedAt, categoryId(nullable), notionPageUrl(nullable), createdAt
+- **articles**: id, userId, source, originalUrl, originalTitle, author(nullable), titleKo, summaryKo, publishedAt, categoryId(nullable), notionPageUrl(nullable), createdAt
   - (userId, originalUrl)에 unique를 겁니다.
   - 카테고리를 삭제하면 categoryId를 NULL로 바꿉니다.
 - **notion_connections**: userId(PK), clientId, accessToken(암호화), refreshToken(암호화), expiresAt, parentPageId

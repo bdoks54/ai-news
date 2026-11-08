@@ -62,6 +62,7 @@ export async function POST() {
             source: item.source,
             originalUrl: item.url,
             originalTitle: item.title,
+            author: item.author,
             titleKo: s.titleKo,
             summaryKo: s.summaryKo,
             publishedAt: item.publishedAt,

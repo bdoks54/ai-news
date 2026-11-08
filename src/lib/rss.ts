@@ -25,6 +25,7 @@ export type FeedItem = {
   source: Source;
   url: string;
   title: string;
+  author: string | null;
   snippet: string;
   publishedAt: Date | null;
 };
@@ -50,6 +51,8 @@ export async function fetchAllFeeds(): Promise<{ items: FeedItem[]; failed: stri
           source: feed.source,
           url: it.link!.trim(),
           title: clean(it.title, 300),
+          // RSS는 dc:creator(creator), Atom은 author.name(author)에 작성자가 들어 있다.
+          author: clean(it.creator ?? (it as { author?: string }).author, 200) || null,
           snippet: clean(it.contentSnippet ?? it.content ?? it.summary),
           publishedAt: it.isoDate ? new Date(it.isoDate) : it.pubDate ? new Date(it.pubDate) : null,
         }));

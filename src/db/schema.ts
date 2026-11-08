@@ -30,6 +30,7 @@ export const articles = pgTable(
     source: text("source", { enum: ["techcrunch", "theverge"] }).notNull(),
     originalUrl: text("original_url").notNull(),
     originalTitle: text("original_title").notNull(),
+    author: text("author"), // 원문 작성자. 피드에 없으면 null
     titleKo: text("title_ko").notNull(),
     summaryKo: text("summary_ko").notNull(),
     publishedAt: timestamp("published_at", { withTimezone: true }),
